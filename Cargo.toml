@@ -1,0 +1,31 @@
+[package]
+name = "xcc"
+description = "Exact Cover solver with color extensions"
+version = "0.1.0"
+authors = ["Pete Bevin <pete@petebevin.com>"]
+license = "MIT or Apache-2.0"
+edition = "2021"
+keywords = ["combinatorial", "constraint"]
+categories = ["algorithms"]
+
+[[bench]]
+name = "bench_matrix"
+harness = false
+
+[dev-dependencies]
+clap = { version = "4.1.8", features = ["derive"] }
+criterion = { version = "0.4", features = ["html_reports"] }
+env_logger = "0.10.0"
+itertools = "0.10.5"
+pretty_assertions = "1.3.0"
+test-log = "0.2.11"
+
+[profile.release]
+opt-level = 1
+debug = true
+overflow-checks = true
+
+[dependencies]
+fixedbitset = "0.4.2"
+log = "0.4.17"
+thiserror = "1.0.38"
