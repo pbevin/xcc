@@ -54,12 +54,9 @@ impl<'a, T> Solver<'a, T> {
         let mut stack: Vec<(SavedState, Vec<usize>)> = vec![(self.save_state(), Vec::new())];
 
         while let Some((state, mut solution)) = stack.pop() {
-            let level = solution.len();
-            log::debug!("[{level}] Entering solve_iterative with state {:?}", state);
             self.restore(state);
             match self.choose_next_item() {
                 None => {
-                    log::info!("Found a solution");
                     // All visited
                     let cells = solution.to_vec();
                     results.push(Solution { cells });
@@ -70,12 +67,6 @@ impl<'a, T> Solver<'a, T> {
                 Some(item) => {
                     self.available_items.set(item, false);
                     let option_ids = self.cover_item_and_its_options(item);
-                    log::debug!(
-                        "[{level}] Chose item {}; options: {:?}; ss: {:?}",
-                        item,
-                        option_ids,
-                        self.save_state()
-                    );
 
                     // We just covered some options, and now we're going to go
                     // through them one by one, and push the resulting states
@@ -83,15 +74,9 @@ impl<'a, T> Solver<'a, T> {
                     let ss = self.save_state();
                     for option in option_ids {
                         self.restore(ss.clone());
-                        log::debug!("[{level}] Committing to option {}", option);
                         self.commit(option);
                         solution.push(option);
                         let saved_state = self.save_state();
-                        log::debug!(
-                            "[{level}] after committing to {}, state = {:?}",
-                            option,
-                            saved_state
-                        );
                         stack.push((saved_state, solution.clone()));
                         solution.pop();
                     }
@@ -281,7 +266,6 @@ impl std::fmt::Debug for SavedState {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use test_log::test;
 
     #[test]
     fn test_choose_next_item() {

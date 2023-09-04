@@ -183,7 +183,6 @@ pub struct OptionData<T> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use itertools::Itertools;
     use pretty_assertions::assert_eq;
 
     macro_rules! hashmap {
@@ -194,6 +193,10 @@ mod tests {
             )*
             map
         }};
+    }
+
+    fn to_vec(set: &FixedBitSet) -> Vec<usize> {
+        set.ones().collect()
     }
 
     #[test]
@@ -210,12 +213,12 @@ mod tests {
 
         let matrix = builder.build();
 
-        assert_eq!(matrix.options[0].items.ones().collect_vec(), [2, 4]);
-        assert_eq!(matrix.options[1].items.ones().collect_vec(), [0, 3, 6]);
-        assert_eq!(matrix.options[2].items.ones().collect_vec(), [1, 2, 5]);
-        assert_eq!(matrix.options[3].items.ones().collect_vec(), [0, 3, 5]);
-        assert_eq!(matrix.options[4].items.ones().collect_vec(), [1, 6]);
-        assert_eq!(matrix.options[5].items.ones().collect_vec(), [3, 4, 6]);
+        assert_eq!(to_vec(&matrix.options[0].items), [2, 4]);
+        assert_eq!(to_vec(&matrix.options[1].items), [0, 3, 6]);
+        assert_eq!(to_vec(&matrix.options[2].items), [1, 2, 5]);
+        assert_eq!(to_vec(&matrix.options[3].items), [0, 3, 5]);
+        assert_eq!(to_vec(&matrix.options[4].items), [1, 6]);
+        assert_eq!(to_vec(&matrix.options[5].items), [3, 4, 6]);
     }
 
     #[test]
@@ -236,19 +239,19 @@ mod tests {
         builder.add_option("r y:B", ["r", "y:B"]);
         let mut matrix = builder.build();
 
-        assert_eq!(matrix.options[0].items.ones().collect_vec(), [0, 1, 3, 4]);
+        assert_eq!(to_vec(&matrix.options[0].items), [0, 1, 3, 4]);
         assert_eq!(matrix.options[0].colors, hashmap![4 => 0]);
 
-        assert_eq!(matrix.options[1].items.ones().collect_vec(), [0, 2, 3, 4]);
+        assert_eq!(to_vec(&matrix.options[1].items), [0, 2, 3, 4]);
         assert_eq!(matrix.options[1].colors, hashmap![3 => 0]);
 
-        assert_eq!(matrix.options[2].items.ones().collect_vec(), [0, 3]);
+        assert_eq!(to_vec(&matrix.options[2].items), [0, 3]);
         assert_eq!(matrix.options[2].colors, hashmap![3 => 1]);
 
-        assert_eq!(matrix.options[3].items.ones().collect_vec(), [1, 3]);
+        assert_eq!(to_vec(&matrix.options[3].items), [1, 3]);
         assert_eq!(matrix.options[3].colors, hashmap![3 => 0]);
 
-        assert_eq!(matrix.options[4].items.ones().collect_vec(), [2, 4]);
+        assert_eq!(to_vec(&matrix.options[4].items), [2, 4]);
         assert_eq!(matrix.options[4].colors, hashmap![4 => 1]);
 
         let solutions = matrix
