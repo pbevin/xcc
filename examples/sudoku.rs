@@ -129,7 +129,7 @@ fn build_matrix(input: &str) -> Matrix<Placement> {
         }
     }
 
-    builder.build()
+    builder.build().expect("Failed to build matrix")
 }
 
 /// A placement of a number in a Sudoku grid.

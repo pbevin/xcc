@@ -41,6 +41,15 @@ impl<T> Unique<T> {
         matches!(self, Unique::Ambiguous(_, _))
     }
 
+    /// Transforms the `Unique` value by applying a function to its contained value.
+    ///
+    /// # Arguments
+    ///
+    /// * `f` - A function that takes a value of type `T` and returns a value of type `U`.
+    ///
+    /// # Returns
+    ///
+    /// A `Unique` instance that contains the result of applying `f` to the original value.
     pub fn map<U>(self, f: impl Fn(T) -> U) -> Unique<U> {
         match self {
             Unique::None => Unique::None,

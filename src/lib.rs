@@ -1,3 +1,5 @@
+#![warn(clippy::pedantic)]
+#![warn(missing_docs)]
 //! Colored Exact Cover Solver
 //!
 //! This is a Rust implementation of Exact Cover, with the addition of the
@@ -33,15 +35,16 @@
 //!
 
 mod builder;
-mod color;
 mod matrix;
 pub mod samples;
 mod solver;
+mod types;
 mod unique;
 
 pub use self::builder::Builder;
-pub use self::color::ColoredItem;
 pub use self::matrix::Matrix;
 pub use self::solver::Solution;
-pub use self::solver::Solver;
+pub use self::solver::{Limit, Solver};
+pub use self::types::ColoredItem;
+pub use self::types::{Color, ItemId};
 pub use self::unique::Unique;

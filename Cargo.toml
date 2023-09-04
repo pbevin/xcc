@@ -5,6 +5,7 @@ version = "0.1.0"
 authors = ["Pete Bevin <pete@petebevin.com>"]
 license = "MIT or Apache-2.0"
 edition = "2021"
+repository = "https://github.com/pbevin/xcc"
 keywords = ["combinatorial", "constraint"]
 categories = ["algorithms"]
 

@@ -22,6 +22,8 @@ use crate::Matrix;
 /// let solutions = matrix.solve_all();
 /// assert_eq!(solutions.len(), 1);
 /// ```
+#[allow(clippy::missing_panics_doc)]
+#[must_use]
 pub fn toy() -> Matrix<usize> {
     let mut builder = Matrix::builder();
     builder.add_primary_items(["p", "q", "r"]);
@@ -31,5 +33,5 @@ pub fn toy() -> Matrix<usize> {
     builder.add_option(3, ["p", "x:B"]);
     builder.add_option(4, ["q", "x:A"]);
     builder.add_option(5, ["r", "y:B"]);
-    builder.build()
+    builder.build().unwrap()
 }

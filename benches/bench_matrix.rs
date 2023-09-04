@@ -3,7 +3,9 @@ use criterion::Throughput;
 use criterion::{criterion_group, criterion_main, Criterion};
 use std::hint::black_box;
 use std::time::Duration;
+use xcc::Color;
 use xcc::ColoredItem;
+use xcc::ItemId;
 use xcc::Matrix;
 
 pub fn sudoku_matrix(c: &mut Criterion) {
@@ -24,10 +26,13 @@ pub fn add_option(c: &mut Criterion) {
             let max = n;
             let mut matrix = Matrix::<()>::new(n, n);
             let items2 = (0..max)
+                .map(ItemId::new)
                 .map(ColoredItem::new)
-                .chain((max..2 * max).map(|i| ColoredItem::with_color(i, i)))
+                .chain(
+                    (max..2 * max).map(|i| ColoredItem::with_color(ItemId::new(i), Color::new(i))),
+                )
                 .collect::<Vec<_>>();
-            b.iter(|| matrix.add_option(black_box(&items2), ()));
+            b.iter(|| matrix.add_option((), black_box(&items2)));
         });
     }
 }
@@ -47,7 +52,7 @@ pub fn build_sudoku_matrix(
     let mut matrix = Matrix::new(num_primary_items, num_secondary_items);
 
     for (placement, items) in options.iter() {
-        matrix.add_option(items, *placement);
+        matrix.add_option(*placement, items);
     }
     matrix
 }
@@ -56,7 +61,10 @@ pub fn build_sudoku_matrix(
 /// isomorphic to Sudoku without any clues.  This uses the low-level API for
 /// benchmarking; see examples/sudoku.rs for a more realistic Sudoku solver.
 pub fn init() -> (Items, Options) {
-    let c = |t: usize, row: usize, column: usize| ColoredItem::new(t * 81 + row * 9 + column);
+    let c = |t: usize, row: usize, column: usize| {
+        let item_id = ItemId::new(t * 81 + row * 9 + column);
+        ColoredItem::new(item_id)
+    };
     let items = (0..324).collect();
 
     let mut options = Vec::new();
@@ -71,7 +79,6 @@ pub fn init() -> (Items, Options) {
                     c(2, col, digit),
                     c(3, box_num, digit),
                 ];
-                assert!(items.iter().all(|i| i.item() < 324));
                 options.push((count, items));
                 count += 1;
             }

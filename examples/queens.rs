@@ -88,5 +88,5 @@ pub fn build_matrix(n: usize) -> Matrix<Queen> {
         }
     }
 
-    builder.build()
+    builder.build().expect("Failed to build matrix")
 }

@@ -1,4 +1,6 @@
 use super::Matrix;
+use crate::types::Color;
+use crate::types::ItemId;
 use crate::ColoredItem;
 use std::collections::HashMap;
 use std::fmt::Debug;
@@ -74,6 +76,7 @@ impl<T> Default for Builder<T> {
 
 impl<T> Builder<T> {
     /// Creates a new Builder.
+    #[must_use]
     pub fn new() -> Self {
         Self::default()
     }
@@ -101,35 +104,45 @@ impl<T> Builder<T> {
     }
 
     /// Adds an option to the matrix.
+    ///
+    /// # Panics
+    ///
+    /// Panics if any primary item is colored.
     pub fn add_option<S: Display>(&mut self, meaning: T, items: impl IntoIterator<Item = S>) {
         let items: Vec<_> = items.into_iter().map(|i| i.to_string()).collect();
         for item in &items {
-            if let Some((name, _color)) = item.split_once(':') {
-                if self.primary_items.iter().any(|i| i == name) {
-                    panic!("Primary items cannot be colored: {item} in {items:?}");
-                }
+            if let Some((item_name, _color)) = item.split_once(':') {
+                assert!(
+                    !self.primary_items.contains(&item_name.to_string()),
+                    "Primary items cannot be colored: {item} in {items:?}"
+                );
             }
         }
         self.options.push((meaning, items));
     }
 
-    /// Builds the matrix.  If there is a problem, this will panic.
-    pub fn build(self) -> Matrix<T> {
-        self.try_build().unwrap()
-    }
-
     /// Builds the matrix, returning a Result. If there is a problem, this will
-    /// return a {BuildError}.
-    pub fn try_build(self) -> Result<Matrix<T>, BuildError> {
+    /// return a {`BuildError`}.
+    ///
+    /// # Errors
+    ///
+    /// This will return an error if:
+    /// * No primary items have been declared.
+    /// * A primary item is not used in any option.
+    /// * An item is declared as both primary and secondary.
+    /// * No options have been declared.
+    /// * An option uses an item that has not been declared.
+    ///
+    pub fn build(self) -> Result<Matrix<T>, BuildError> {
         let primary_items: &[String] = &self.primary_items;
         let secondary_items: &[String] = &self.secondary_items;
         let options = self.options;
 
-        let header_names: HashMap<&str, usize> = primary_items
+        let header_names: HashMap<&str, ItemId> = primary_items
             .iter()
             .chain(secondary_items.iter())
             .enumerate()
-            .map(|(i, s)| (s.as_ref(), i))
+            .map(|(i, name)| (name.as_ref(), ItemId::new(i)))
             .collect();
 
         let mut colors = HashMap::new();
@@ -148,22 +161,19 @@ impl<T> Builder<T> {
             let mut parsed_items = Vec::new();
 
             for s in opt_items {
-                let parsed_item = match s.split_once(':') {
-                    Some((name, color)) => {
-                        let item_id = *header_names
-                            .get(name)
-                            .unwrap_or_else(|| panic!("Item {:?} not found", name));
-                        let color_id = colors[color];
-                        ColoredItem::with_color(item_id, color_id)
-                    }
-                    None => {
-                        let item_id = header_names[s.as_str()];
-                        ColoredItem::new(item_id)
-                    }
+                let parsed_item = if let Some((name, color)) = s.split_once(':') {
+                    let item_id = *header_names
+                        .get(name)
+                        .ok_or_else(|| BuildError::ItemNotDeclared(name.to_string()))?;
+                    let color_id = colors[color];
+                    ColoredItem::with_color(item_id, Color::new(color_id))
+                } else {
+                    let item_id = header_names[s.as_str()];
+                    ColoredItem::new(item_id)
                 };
                 parsed_items.push(parsed_item);
             }
-            matrix.add_option(&parsed_items, meaning);
+            matrix.add_option(meaning, &parsed_items);
         }
         Ok(matrix)
     }
@@ -172,19 +182,17 @@ impl<T> Builder<T> {
 impl<T: Debug> Builder<T> {
     /// Prints the configuration to stdout in a format that can be read by Knuth's dlx2 program.
     /// Only available if the type of meanings is Debug.
-    pub fn dump_knuth_format(&self) {
-        println!("| primary items: {}", self.primary_items.len());
-        println!("| secondary items: {}", self.secondary_items.len());
-        println!("| options: {}", self.options.len());
-        print!("{}", self.primary_items.join(" "));
+    #[must_use]
+    pub fn dump_knuth_format(&self) -> String {
+        let mut buf = self.primary_items.join(" ").to_string();
         if !self.secondary_items.is_empty() {
-            print!(" | ");
-            print!("{}", self.secondary_items.join(" "));
+            buf.push_str(" | ");
+            buf.push_str(&self.secondary_items.join(" "));
         }
-        println!();
-        for (i, (meaning, items)) in self.options.iter().enumerate() {
-            println!("| Option {}: {:?}", i, meaning);
-            println!("{}", items.join(" "));
+        buf.push('\n');
+        for (_, items) in &self.options {
+            buf.push_str(&items.join(" "));
         }
+        buf
     }
 }
