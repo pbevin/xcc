@@ -192,6 +192,7 @@ impl<T: Debug> Builder<T> {
         buf.push('\n');
         for (_, items) in &self.options {
             buf.push_str(&items.join(" "));
+            buf.push('\n');
         }
         buf
     }
